@@ -101,13 +101,9 @@ public class TelegramBot extends TelegramLongPollingBot {
             long messageId = update.getCallbackQuery().getMessage().getMessageId();
             long chatId = update.getCallbackQuery().getMessage().getChatId();
 
-            if(callBackData.equals(RED_LAKE)) {
-                String text = "You pressed Красное озрео";
-                executeEditMessageText(text, chatId, messageId);
-            }else if (callBackData.equals(IGORA)) {
-                String text = "You pressed Игора";
-                executeEditMessageText(text, chatId, messageId);
-            }
+            String text = SaintPetersburg.valueOf(callBackData).resort;
+
+            executeEditMessageText(text, chatId, messageId);
         }
     }
 
@@ -118,20 +114,16 @@ public class TelegramBot extends TelegramLongPollingBot {
 
         InlineKeyboardMarkup markupInLine = new InlineKeyboardMarkup();
         List<List<InlineKeyboardButton>> rowsInLine = new ArrayList<>();
-        List<InlineKeyboardButton> rowInLine = new ArrayList<>();
-        InlineKeyboardButton buttonRedLake = new InlineKeyboardButton();
 
-        buttonRedLake.setText("Красное озеро");
-        buttonRedLake.setCallbackData(RED_LAKE);
 
-        InlineKeyboardButton buttonIgora = new InlineKeyboardButton();
-        buttonIgora.setText("Игора");
-        buttonIgora.setCallbackData(IGORA);
-
-        rowInLine.add(buttonRedLake);
-        rowInLine.add(buttonIgora);
-
-        rowsInLine.add(rowInLine);
+        for (Enum e : SaintPetersburg.values()) {
+            List<InlineKeyboardButton> rowInLine = new ArrayList<>();
+            InlineKeyboardButton button = new InlineKeyboardButton();
+            button.setText(e.toString());
+            button.setCallbackData(e.name());
+            rowInLine.add(button);
+            rowsInLine.add(rowInLine);
+        }
 
         markupInLine.setKeyboard(rowsInLine);
 
