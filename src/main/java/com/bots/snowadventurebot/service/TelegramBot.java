@@ -3,10 +3,13 @@ package com.bots.snowadventurebot.service;
 import com.bots.snowadventurebot.config.BotConfig;
 import com.bots.snowadventurebot.model.User;
 import com.bots.snowadventurebot.model.UserRepository;
+import com.bots.snowadventurebot.utils.RegionEntity;
+import com.bots.snowadventurebot.utils.ResortEntity;
 import com.vdurmont.emoji.EmojiParser;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.commands.SetMyCommands;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
@@ -28,20 +31,23 @@ import java.util.List;
 
 @Slf4j
 @Component
+@Service
 public class TelegramBot extends TelegramLongPollingBot {
 
     @Autowired
     private UserRepository userRepository;
+    private final ResortService resortService;
+    private final RegionService regionService;
     private final BotConfig config;
+    private int regionId = 0;
+    private boolean rideSwitch = false;
     static final String HELP_TEXT = "Бот который показывает какие горнолыжные курорты существуют и где они находятся";
     static final String TEMP_ANSWER = "Извините... мой создатель еще не научил меня что делать с этой командой";
-
-    static final String RED_LAKE = "RED_LAKE";
-    static final String IGORA = "IGORA";
-
     static final String ERROR_TEXT = "Error occurred: ";
 
-    public TelegramBot(BotConfig config) {
+    public TelegramBot(ResortService resortService, RegionService regionService, BotConfig config) {
+        this.resortService = resortService;
+        this.regionService = regionService;
         this.config = config;
         List<BotCommand> listOfCommands = new ArrayList<>();
         listOfCommands.add(new BotCommand("/start", "Давайте начнем"));
@@ -84,7 +90,7 @@ public class TelegramBot extends TelegramLongPollingBot {
                         startCommandReceived(chatId, update.getMessage().getChat().getFirstName());
                         break;
                     case "/ride":
-                        rideCities(chatId);
+                        rideRegion(chatId);
                         break;
                     case "/weather":
                         prepareAndSendMessage(chatId, TEMP_ANSWER);
@@ -101,26 +107,31 @@ public class TelegramBot extends TelegramLongPollingBot {
             long messageId = update.getCallbackQuery().getMessage().getMessageId();
             long chatId = update.getCallbackQuery().getMessage().getChatId();
 
-            String text = SaintPetersburg.valueOf(callBackData).resort;
+            if(rideSwitch && Integer.parseInt(callBackData) > 0) {
+                rideResort(chatId, Integer.parseInt(callBackData));
+                return;
+            }
 
-            executeEditMessageText(text, chatId, messageId);
+            //переделать здесь
+            executeEditMessageText(callBackData, chatId, messageId);
         }
     }
 
-    private void rideCities(long chatId) {
+
+    private void rideRegion(long chatId) {
+        rideSwitch = true;
         SendMessage message = new SendMessage();
         message.setChatId(chatId);
-        message.setText("Санкт-Петербург");
+        message.setText("Выбери локацию:");
 
         InlineKeyboardMarkup markupInLine = new InlineKeyboardMarkup();
         List<List<InlineKeyboardButton>> rowsInLine = new ArrayList<>();
 
-
-        for (Enum e : SaintPetersburg.values()) {
+        for (RegionEntity entity : regionService.getAll()) {
             List<InlineKeyboardButton> rowInLine = new ArrayList<>();
             InlineKeyboardButton button = new InlineKeyboardButton();
-            button.setText(e.toString());
-            button.setCallbackData(e.name());
+            button.setText(entity.getRegionName());
+            button.setCallbackData(String.valueOf(entity.getRegionId()));
             rowInLine.add(button);
             rowsInLine.add(rowInLine);
         }
@@ -130,7 +141,45 @@ public class TelegramBot extends TelegramLongPollingBot {
         message.setReplyMarkup(markupInLine);
 
         executeMessage(message);
+    }
 
+
+    private void rideResort(long chatId, int regionId){
+        rideSwitch = false;
+        System.out.println(regionId);
+        SendMessage message = new SendMessage();
+        message.setChatId(chatId);
+        message.setText("Выбери курорт:");
+
+
+        InlineKeyboardMarkup markupInLine = new InlineKeyboardMarkup();
+        List<List<InlineKeyboardButton>> rowsInLine = new ArrayList<>();
+
+        for (ResortEntity entity : resortService.getAll(regionId)) {
+            List<InlineKeyboardButton> rowInLine = new ArrayList<>();
+            InlineKeyboardButton button = new InlineKeyboardButton();
+            button.setText(entity.getResortName());
+            button.setCallbackData(String.valueOf(entity.getResortId()));
+            rowInLine.add(button);
+
+            rowsInLine.add(rowInLine);
+        }
+
+        /*for (Enum e : SaintPetersburg.values()) {
+            List<InlineKeyboardButton> rowInLine = new ArrayList<>();
+            InlineKeyboardButton button = new InlineKeyboardButton();
+            button.setText(e.toString());
+            button.setCallbackData(e.name());
+            rowInLine.add(button);
+            rowsInLine.add(rowInLine);
+        }*/
+
+
+        markupInLine.setKeyboard(rowsInLine);
+
+        message.setReplyMarkup(markupInLine);
+
+        executeMessage(message);
     }
 
     private void registerUser(Message message) {
