@@ -20,5 +20,9 @@ public class ResortService {
         return resortRepository.getRegionID(regionId);
     }
 
+    public ResortEntity getByResortId(int resortId){
+        return resortRepository.getByResortId(resortId);
+    }
+
 }
 

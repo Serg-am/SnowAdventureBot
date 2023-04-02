@@ -111,10 +111,23 @@ public class TelegramBot extends TelegramLongPollingBot {
                 rideResort(chatId, Integer.parseInt(callBackData));
                 return;
             }
+            String text = returnTextDb(callBackData);
 
-            //переделать здесь
-            executeEditMessageText(callBackData, chatId, messageId);
+            executeEditMessageText(text, chatId, messageId);
+
         }
+    }
+
+    private String returnTextDb(String callBackData) {
+        int id = Integer.parseInt(callBackData);
+        String result;
+        ResortEntity resort = resortService.getByResortId(id);
+        result = resort.getResortName() + "\n\n"
+                + resort.getResortDescription() + "\n"
+                + "Контактный телефон: " + resort.getResortTelephone() + "\n"
+                + "Сайт: " + resort.getResortWebSite();
+
+        return result;
     }
 
 
@@ -164,17 +177,6 @@ public class TelegramBot extends TelegramLongPollingBot {
 
             rowsInLine.add(rowInLine);
         }
-
-        /*for (Enum e : SaintPetersburg.values()) {
-            List<InlineKeyboardButton> rowInLine = new ArrayList<>();
-            InlineKeyboardButton button = new InlineKeyboardButton();
-            button.setText(e.toString());
-            button.setCallbackData(e.name());
-            rowInLine.add(button);
-            rowsInLine.add(rowInLine);
-        }*/
-
-
         markupInLine.setKeyboard(rowsInLine);
 
         message.setReplyMarkup(markupInLine);

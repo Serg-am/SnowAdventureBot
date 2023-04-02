@@ -13,4 +13,8 @@ public interface ResortRepository extends JpaRepository<ResortEntity, Integer> {
     @Query(value = "SELECT * FROM resort WHERE region_id = :regionId",
             nativeQuery = true)
     List<ResortEntity> getRegionID(int regionId);
+
+    @Query(value = "SELECT * FROM resort WHERE resort_id = :resortId",
+    nativeQuery = true)
+    ResortEntity getByResortId(int resortId);
 }
