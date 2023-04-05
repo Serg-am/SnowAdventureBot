@@ -1,6 +1,6 @@
 package com.bots.snowadventurebot.repositories;
 
-import com.bots.snowadventurebot.utils.ResortEntity;
+import com.bots.snowadventurebot.model.ResortEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;

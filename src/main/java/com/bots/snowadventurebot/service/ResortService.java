@@ -1,7 +1,7 @@
 package com.bots.snowadventurebot.service;
 
 import com.bots.snowadventurebot.repositories.ResortRepository;
-import com.bots.snowadventurebot.utils.ResortEntity;
+import com.bots.snowadventurebot.model.ResortEntity;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 

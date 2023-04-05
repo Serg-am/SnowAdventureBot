@@ -1,4 +1,4 @@
-package com.bots.snowadventurebot.utils;
+package com.bots.snowadventurebot.model;
 
 import lombok.Data;
 import org.hibernate.annotations.GenericGenerator;

@@ -1,7 +1,7 @@
 package com.bots.snowadventurebot.service;
 
 import com.bots.snowadventurebot.repositories.RegionRepository;
-import com.bots.snowadventurebot.utils.RegionEntity;
+import com.bots.snowadventurebot.model.RegionEntity;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -16,4 +16,7 @@ public class RegionService {
         return regionRepository.findAll();
     }
 
+    public RegionEntity getByResortId(int regionId){
+        return regionRepository.getByResortId(regionId);
+    }
 }

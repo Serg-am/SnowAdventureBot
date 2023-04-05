@@ -1,20 +1,18 @@
 package com.bots.snowadventurebot.config;
 
 import lombok.Data;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.PropertySource;
 import org.springframework.scheduling.annotation.EnableScheduling;
+import org.springframework.stereotype.Component;
 
 @Configuration
 @EnableScheduling
 @Data
-@PropertySource("application.properties")
+@Component
+@ConfigurationProperties(prefix = "bot")
 public class BotConfig {
-    @Value("${bot.name}")
-    String botName;
-    @Value("${bot.token}")
+    String name;
     String token;
-    @Value("${bot.owner}")
-    Long ownerId;
+    Long owner;
 }

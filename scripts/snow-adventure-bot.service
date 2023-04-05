@@ -12,7 +12,7 @@ Group=root
 
 Type=simple
 
-ExecStart=java -jar /opt/bots/snow-adventure-bot.jar
+ExecStart=java -jar /var/bot/SnowAdventureBot.jar
 
 [Install]
 WantedBy=multi-user.target

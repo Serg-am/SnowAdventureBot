@@ -2,9 +2,9 @@ package com.bots.snowadventurebot.service;
 
 import com.bots.snowadventurebot.config.BotConfig;
 import com.bots.snowadventurebot.model.User;
-import com.bots.snowadventurebot.model.UserRepository;
-import com.bots.snowadventurebot.utils.RegionEntity;
-import com.bots.snowadventurebot.utils.ResortEntity;
+import com.bots.snowadventurebot.repositories.UserRepository;
+import com.bots.snowadventurebot.model.RegionEntity;
+import com.bots.snowadventurebot.model.ResortEntity;
 import com.vdurmont.emoji.EmojiParser;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,7 +39,6 @@ public class TelegramBot extends TelegramLongPollingBot {
     private final ResortService resortService;
     private final RegionService regionService;
     private final BotConfig config;
-    private int regionId = 0;
     private boolean rideSwitch = false;
     static final String HELP_TEXT = "Бот который показывает какие горнолыжные курорты существуют и где они находятся";
     static final String TEMP_ANSWER = "Извините... мой создатель еще не научил меня что делать с этой командой";
@@ -63,7 +62,7 @@ public class TelegramBot extends TelegramLongPollingBot {
 
     @Override
     public String getBotUsername() {
-        return config.getBotName();
+        return config.getName();
     }
 
     @Override
@@ -77,7 +76,7 @@ public class TelegramBot extends TelegramLongPollingBot {
             String messageText = update.getMessage().getText();
             long chatId = update.getMessage().getChatId();
 
-            if(messageText.contains("/send") && config.getOwnerId() == chatId) {
+            if(messageText.contains("/send") && config.getOwner() == chatId) {
                 String textToSend = EmojiParser.parseToUnicode(messageText.substring(messageText.indexOf(" ")));
                 Iterable<User> users = userRepository.findAll();
                 for (User user: users){
@@ -108,13 +107,13 @@ public class TelegramBot extends TelegramLongPollingBot {
             long chatId = update.getCallbackQuery().getMessage().getChatId();
 
             if(rideSwitch && Integer.parseInt(callBackData) > 0) {
+                executeEditMessageText(returnRegionDb(callBackData) + ":", chatId, messageId);
                 rideResort(chatId, Integer.parseInt(callBackData));
                 return;
             }
             String text = returnTextDb(callBackData);
 
             executeEditMessageText(text, chatId, messageId);
-
         }
     }
 
@@ -123,10 +122,17 @@ public class TelegramBot extends TelegramLongPollingBot {
         String result;
         ResortEntity resort = resortService.getByResortId(id);
         result = resort.getResortName() + "\n\n"
-                + resort.getResortDescription() + "\n"
-                + "Контактный телефон: " + resort.getResortTelephone() + "\n"
+                + resort.getResortDescription() + "\n\n"
+                + "Контактный телефон: " + resort.getResortTelephone() + "\n\n"
                 + "Сайт: " + resort.getResortWebSite();
+        return result;
+    }
 
+    private String returnRegionDb(String callBackData) {
+        int id = Integer.parseInt(callBackData);
+        String result;
+        RegionEntity region = regionService.getByResortId(id);
+        result = region.getRegionName();
         return result;
     }
 
@@ -163,7 +169,6 @@ public class TelegramBot extends TelegramLongPollingBot {
         SendMessage message = new SendMessage();
         message.setChatId(chatId);
         message.setText("Выбери курорт:");
-
 
         InlineKeyboardMarkup markupInLine = new InlineKeyboardMarkup();
         List<List<InlineKeyboardButton>> rowsInLine = new ArrayList<>();
@@ -218,24 +223,27 @@ public class TelegramBot extends TelegramLongPollingBot {
         executeMessage(message);
     }
 
+    //Пока не используем, использовать когда нужны будут всплывающие кнопки
     public ReplyKeyboardMarkup replayKeyBoard() {
         ReplyKeyboardMarkup keyboardMarkup = new ReplyKeyboardMarkup();
         List<KeyboardRow> keyboardRows = new ArrayList<>();
 
         KeyboardRow row = new KeyboardRow();
-        row.add("temp1");
-        row.add("temp2");
+        row.add("Вернуться назад");
+        //row.add("temp2");
+
 
         keyboardRows.add(row);
 
-        row = new KeyboardRow();
-        row.add("temp3");
-        row.add("temp4");
-        row.add("temp5");
+        //row = new KeyboardRow();
+        //row.add("temp3");
+        //row.add("temp4");
+        //row.add("temp5");
 
-        keyboardRows.add(row);
+        //keyboardRows.add(row);
 
         keyboardMarkup.setKeyboard(keyboardRows);
+        keyboardMarkup.setResizeKeyboard(true);
 
         return keyboardMarkup;
     }
