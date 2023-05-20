@@ -119,9 +119,6 @@ public class OpenWeatherMapJsonParser {
         }
 
         String formattedDescription = description.replaceAll("\"", "");
-        if(formattedDescription.equals("Clouds")){
-            formattedDescription = "Облачно";
-        }
 
         String weatherIconCode = WeatherUtils.weatherIconsCodes.get(formattedDescription);
 

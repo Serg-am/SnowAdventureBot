@@ -28,4 +28,7 @@ public class ResortEntity {
 
     @Column(name = "resort_description")
     private String resortDescription;
+
+    @Column(name = "weather_region")
+    private String weatherRegion;
 }

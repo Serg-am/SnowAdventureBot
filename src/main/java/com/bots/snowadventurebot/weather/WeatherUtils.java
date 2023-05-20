@@ -10,6 +10,6 @@ public class WeatherUtils {
         weatherIconsCodes.put("Clear", "☀");
         weatherIconsCodes.put("Rain", "☔");
         weatherIconsCodes.put("Snow", "❄");
-        weatherIconsCodes.put("Облачно", "☁");
+        weatherIconsCodes.put("Clouds", "☁");
     }
 }

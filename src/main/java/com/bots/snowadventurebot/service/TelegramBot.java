@@ -134,7 +134,7 @@ public class TelegramBot extends TelegramLongPollingBot {
                 executeEditMessageText(returnRegionDb(callBackData) + ":", chatId, messageId);
                 rideResort(chatId, Integer.parseInt(callBackData));
                 weatherSwitch = false;
-                textCallbackQuery = openWeatherMapJsonParser.getReadyForecast("Кировск");
+                textCallbackQuery = openWeatherMapJsonParser.getReadyForecast(returnWeatherRegion(callBackData));
                 return;
             }
 
@@ -144,6 +144,12 @@ public class TelegramBot extends TelegramLongPollingBot {
         }
     }
 
+    private String returnWeatherRegion(String callBackData){
+        int id = Integer.parseInt(callBackData);
+        ResortEntity resort = resortService.getByResortId(id);
+        return resort.getWeatherRegion();
+
+    }
     private String returnTextDb(String callBackData) {
         int id = Integer.parseInt(callBackData);
         String result;
