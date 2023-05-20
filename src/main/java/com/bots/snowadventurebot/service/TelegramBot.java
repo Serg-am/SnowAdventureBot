@@ -5,6 +5,7 @@ import com.bots.snowadventurebot.model.User;
 import com.bots.snowadventurebot.repositories.UserRepository;
 import com.bots.snowadventurebot.model.RegionEntity;
 import com.bots.snowadventurebot.model.ResortEntity;
+import com.bots.snowadventurebot.weather.OpenWeatherMapJsonParser;
 import com.vdurmont.emoji.EmojiParser;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,16 +41,29 @@ public class TelegramBot extends TelegramLongPollingBot {
     private final RegionService regionService;
     private final BotConfig config;
     private boolean rideSwitch = false;
-    static final String HELP_TEXT = "Бот который показывает какие горнолыжные курорты существуют и где они находятся";
-    static final String TEMP_ANSWER = "Извините... мой создатель еще не научил меня что делать с этой командой";
+    private boolean weatherSwitch = false;
+    private String textCallbackQuery = "Error";
+    static final String START_MESSAGE = "Привет, %s, рад тебя видеть! =)\uD83C\uDFC2"
+            + "\nДавай я тебе расскажу немного про себя.\nЯ бот\uD83E\uDD2B\uD83E\uDD10\uD83E\uDD23 Теперь когда ты знаешь мою тайну я расскажу вот что:\n" +
+            "Есди ты напишешь мне /ride - я покажу в каких областях нашей страны есть крутые горнолыжние курорты.\n" +
+            "А если напишешь /weather - покажу какая там погода на ближайшие дни\n" +
+            "Также есть /help - там ничего интересного, но на всякий случай там помощь... хотя по моему мнению, если тебе интересно мнение бота, помощь там сомнительная, я ведь и так тебе все расказал\uD83D\uDE09\n" +
+            "Хороших тебе покатушек⛷\uD83C\uDFC2⛷\uD83C\uDFC2⛷\uD83C\uDFC2";
+    static final String HELP_TEXT = "Я бот который показывает какие горнолыжные курорты существуют у меня есть ссылки на сайты, что бы ты мог подробнее все узнать, и их номера телефонов.\n" +
+            "/ride - Посмотреть список областей и какие есть склоны\n" +
+            "/weather - Погода на склонах\n" +
+            "/help - Ты снова попадешь ко мне в помощь\uD83D\uDE09\n";
+    static final String TEMP_ANSWER = "Извини... мой создатель еще не научил меня что делать с этой командой";
     static final String ERROR_TEXT = "Error occurred: ";
+    private final OpenWeatherMapJsonParser openWeatherMapJsonParser;
 
-    public TelegramBot(ResortService resortService, RegionService regionService, BotConfig config) {
+    public TelegramBot(ResortService resortService, RegionService regionService, BotConfig config, OpenWeatherMapJsonParser openWeatherMapJsonParser) {
         this.resortService = resortService;
         this.regionService = regionService;
         this.config = config;
+        this.openWeatherMapJsonParser = openWeatherMapJsonParser;
         List<BotCommand> listOfCommands = new ArrayList<>();
-        listOfCommands.add(new BotCommand("/start", "Давайте начнем"));
+        listOfCommands.add(new BotCommand("/start", "Давай начнем"));
         listOfCommands.add(new BotCommand("/ride", "Посмотрим курорты "));
         listOfCommands.add(new BotCommand("/weather", "Погода на склонах"));
         listOfCommands.add(new BotCommand("/help", "Помощь"));
@@ -89,10 +103,12 @@ public class TelegramBot extends TelegramLongPollingBot {
                         startCommandReceived(chatId, update.getMessage().getChat().getFirstName());
                         break;
                     case "/ride":
+                        rideSwitch = true;
                         rideRegion(chatId);
                         break;
                     case "/weather":
-                        prepareAndSendMessage(chatId, TEMP_ANSWER);
+                        weatherSwitch = true;
+                        rideRegion(chatId);
                         break;
                     case "/help":
                         prepareAndSendMessage(chatId, HELP_TEXT);
@@ -103,17 +119,28 @@ public class TelegramBot extends TelegramLongPollingBot {
             }
         } else if(update.hasCallbackQuery()) {
             String callBackData = update.getCallbackQuery().getData();
+            System.out.println(callBackData);
             long messageId = update.getCallbackQuery().getMessage().getMessageId();
             long chatId = update.getCallbackQuery().getMessage().getChatId();
 
-            if(rideSwitch && Integer.parseInt(callBackData) > 0) {
+
+            if(rideSwitch) {
                 executeEditMessageText(returnRegionDb(callBackData) + ":", chatId, messageId);
                 rideResort(chatId, Integer.parseInt(callBackData));
+                rideSwitch = false;
+                textCallbackQuery = returnTextDb(callBackData);
+                return;
+            } else if (weatherSwitch) {
+                executeEditMessageText(returnRegionDb(callBackData) + ":", chatId, messageId);
+                rideResort(chatId, Integer.parseInt(callBackData));
+                weatherSwitch = false;
+                textCallbackQuery = openWeatherMapJsonParser.getReadyForecast("Кировск");
                 return;
             }
-            String text = returnTextDb(callBackData);
 
-            executeEditMessageText(text, chatId, messageId);
+            System.out.println("Тут");
+
+            executeEditMessageText(textCallbackQuery, chatId, messageId);
         }
     }
 
@@ -130,15 +157,12 @@ public class TelegramBot extends TelegramLongPollingBot {
 
     private String returnRegionDb(String callBackData) {
         int id = Integer.parseInt(callBackData);
-        String result;
         RegionEntity region = regionService.getByResortId(id);
-        result = region.getRegionName();
-        return result;
+        return region.getRegionName();
     }
 
 
     private void rideRegion(long chatId) {
-        rideSwitch = true;
         SendMessage message = new SendMessage();
         message.setChatId(chatId);
         message.setText("Выбери локацию:");
@@ -207,9 +231,7 @@ public class TelegramBot extends TelegramLongPollingBot {
     }
 
     private void startCommandReceived(long chatId, String firstName){
-        String answer = EmojiParser.parseToUnicode("Привет, " + firstName + ", рад что ты присоединился к нам! =)" + ":snowboarder:");
-
-        prepareAndSendMessage(chatId, answer);
+        prepareAndSendMessage(chatId, String.format(START_MESSAGE, firstName));
     }
 
     //Пока не используем, использовать когда нужны будут всплывающие кнопки
