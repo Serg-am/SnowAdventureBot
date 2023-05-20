@@ -42,6 +42,9 @@ public class TelegramBot extends TelegramLongPollingBot {
     private final BotConfig config;
     private boolean rideSwitch = false;
     private boolean weatherSwitch = false;
+
+    private boolean answerRideSwitch = false;
+    private boolean answerWeatherSwitch = false;
     private String textCallbackQuery = "Error";
     static final String START_MESSAGE = "Привет, %s, рад тебя видеть! =)\uD83C\uDFC2"
             + "\nДавай я тебе расскажу немного про себя.\nЯ бот\uD83E\uDD2B\uD83E\uDD10\uD83E\uDD23 Теперь когда ты знаешь мою тайну я расскажу вот что:\n" +
@@ -127,18 +130,22 @@ public class TelegramBot extends TelegramLongPollingBot {
             if(rideSwitch) {
                 executeEditMessageText(returnRegionDb(callBackData) + ":", chatId, messageId);
                 rideResort(chatId, Integer.parseInt(callBackData));
-                rideSwitch = false;
-                textCallbackQuery = returnTextDb(callBackData);
+                answerRideSwitch = true;
                 return;
             } else if (weatherSwitch) {
                 executeEditMessageText(returnRegionDb(callBackData) + ":", chatId, messageId);
                 rideResort(chatId, Integer.parseInt(callBackData));
                 weatherSwitch = false;
-                textCallbackQuery = openWeatherMapJsonParser.getReadyForecast(returnWeatherRegion(callBackData));
+                answerWeatherSwitch = true;
                 return;
             }
-
-            System.out.println("Тут");
+            if(answerRideSwitch){
+                answerRideSwitch = false;
+                textCallbackQuery = returnTextDb(callBackData);
+            } else if (answerWeatherSwitch) {
+                answerWeatherSwitch = false;
+                textCallbackQuery = openWeatherMapJsonParser.getReadyForecast(returnWeatherRegion(callBackData));
+            }
 
             executeEditMessageText(textCallbackQuery, chatId, messageId);
         }
