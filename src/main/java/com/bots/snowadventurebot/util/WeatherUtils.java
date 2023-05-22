@@ -1,4 +1,4 @@
-package com.bots.snowadventurebot.weather;
+package com.bots.snowadventurebot.util;
 
 import java.util.HashMap;
 import java.util.Map;

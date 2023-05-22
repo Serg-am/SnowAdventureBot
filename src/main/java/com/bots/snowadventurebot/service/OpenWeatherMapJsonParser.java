@@ -1,10 +1,11 @@
-package com.bots.snowadventurebot.weather;
+package com.bots.snowadventurebot.service;
 
+import com.bots.snowadventurebot.config.WeatherConfig;
+import com.bots.snowadventurebot.util.WeatherUtils;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.Data;
 import org.springframework.context.annotation.Configuration;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -23,7 +24,7 @@ public class OpenWeatherMapJsonParser {
         this.weatherConfig = weatherConfig;
     }
 
-    private WeatherConfig weatherConfig;
+    private WeatherConfig weatherConfig ;
     private final static DateTimeFormatter INPUT_DATE_TIME_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
     private final static DateTimeFormatter OUTPUT_DATE_TIME_FORMAT = DateTimeFormatter.ofPattern("MMM-dd HH:mm", Locale.US);
 
@@ -35,7 +36,7 @@ public class OpenWeatherMapJsonParser {
             List<String> linesOfForecast = convertRawDataToList(jsonRawData);
             result = String.format("%s:%s%s", city, System.lineSeparator(), parseForecastDataFromList(linesOfForecast));
         } catch (IllegalArgumentException e) {
-            return String.format("Не могу найти город \"%s\". Попробуйте другой город.", city);
+            return String.format("Не могу найти город \"%s\".", city);
         } catch (Exception e) {
             e.printStackTrace();
             return "В данный момент погодный сервис не исправен, приносим свои извинения, в ближайшее время работа возобновится. Хорошего дня!";
@@ -44,12 +45,12 @@ public class OpenWeatherMapJsonParser {
     }
 
     private String downloadJsonRawData(String city) throws Exception {
-        String urlString = weatherConfig.apiTemplate + city + weatherConfig.apiKey;
+        String urlString = weatherConfig.getApiTemplate() + city + weatherConfig.getApiKey();
         URL urlObject = new URL(urlString);
 
         HttpURLConnection connection = (HttpURLConnection) urlObject.openConnection();
         connection.setRequestMethod("GET");
-        connection.setRequestProperty("User-Agent", weatherConfig.userAgent);
+        connection.setRequestProperty("User-Agent", weatherConfig.getUserAgent());
 
         int responseCode = connection.getResponseCode();
         if (responseCode == 404) {

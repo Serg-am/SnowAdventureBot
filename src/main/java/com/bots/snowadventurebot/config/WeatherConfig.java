@@ -1,4 +1,4 @@
-package com.bots.snowadventurebot.weather;
+package com.bots.snowadventurebot.config;
 
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;

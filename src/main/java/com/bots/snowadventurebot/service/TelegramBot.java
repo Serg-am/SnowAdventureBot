@@ -5,7 +5,6 @@ import com.bots.snowadventurebot.model.User;
 import com.bots.snowadventurebot.repositories.UserRepository;
 import com.bots.snowadventurebot.model.RegionEntity;
 import com.bots.snowadventurebot.model.ResortEntity;
-import com.bots.snowadventurebot.weather.OpenWeatherMapJsonParser;
 import com.vdurmont.emoji.EmojiParser;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,7 +41,6 @@ public class TelegramBot extends TelegramLongPollingBot {
     private final BotConfig config;
     private boolean rideSwitch = false;
     private boolean weatherSwitch = false;
-
     private boolean answerRideSwitch = false;
     private boolean answerWeatherSwitch = false;
     private String textCallbackQuery = "Error";
@@ -52,7 +50,7 @@ public class TelegramBot extends TelegramLongPollingBot {
             "А если напишешь /weather - покажу какая там погода на ближайшие дни\n" +
             "Также есть /help - там ничего интересного, но на всякий случай там помощь... хотя по моему мнению, если тебе интересно мнение бота, помощь там сомнительная, я ведь и так тебе все расказал\uD83D\uDE09\n" +
             "Хороших тебе покатушек⛷\uD83C\uDFC2⛷\uD83C\uDFC2⛷\uD83C\uDFC2";
-    static final String HELP_TEXT = "Я бот который показывает какие горнолыжные курорты существуют у меня есть ссылки на сайты, что бы ты мог подробнее все узнать, и их номера телефонов.\n" +
+    static final String HELP_TEXT = "Я бот который показывает какие горнолыжные курорты существуют. У меня есть ссылки на сайты, и номера телефонов, что бы ты мог подробнее все узнать.\n" +
             "/ride - Посмотреть список областей и какие есть склоны\n" +
             "/weather - Погода на склонах\n" +
             "/help - Ты снова попадешь ко мне в помощь\uD83D\uDE09\n";
@@ -122,10 +120,9 @@ public class TelegramBot extends TelegramLongPollingBot {
             }
         } else if(update.hasCallbackQuery()) {
             String callBackData = update.getCallbackQuery().getData();
-            System.out.println(callBackData);
+
             long messageId = update.getCallbackQuery().getMessage().getMessageId();
             long chatId = update.getCallbackQuery().getMessage().getChatId();
-
 
             if(rideSwitch) {
                 executeEditMessageText(returnRegionDb(callBackData) + ":", chatId, messageId);
@@ -266,7 +263,6 @@ public class TelegramBot extends TelegramLongPollingBot {
         KeyboardRow row = new KeyboardRow();
         row.add("Вернуться назад");
         //row.add("temp2");
-
 
         keyboardRows.add(row);
 
